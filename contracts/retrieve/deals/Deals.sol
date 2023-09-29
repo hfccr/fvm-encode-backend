@@ -24,30 +24,6 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         DealTerminated
     }
 
-    // TODO: Replace with deal request struct
-    struct Deal {
-        // subject of the deal
-        string data_uri;
-        // Timestamp request
-        uint256 timestamp_request;
-        // Starting timestamp
-        uint256 timestamp_start;
-        // Duration of deal expressed in seconds
-        uint256 duration;
-        // Amount in wei paid for the deal
-        uint256 value;
-        // Amount in wei needed to accept the deal
-        uint256 collateral;
-        // Address of provider
-        mapping(address => bool) providers;
-        // Address of owner
-        address owner;
-        // Describe if deal is canceled or not
-        bool canceled;
-        // Addresses authorized to create appeals
-        mapping(address => bool) appeal_addresses;
-    }
-
     struct RetrievalDeal {
         address owner;
         uint64 deal_id;
@@ -63,12 +39,8 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         uint64 provider_actor_id;
         uint64 client_actor_id;
     }
-    // Mapping deals
-    mapping(uint256 => Deal) public deals;
 
     mapping(uint256 => RetrievalDeal) public retrieval_deals;
-
-    RetrievalDeal[] public retrieval_deal_list;
 
     Counters.Counter private dealCounter;
 
@@ -80,13 +52,6 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
 
     Providers public providersStore;
 
-    event DealProposalCreated(
-        uint256 index,
-        address[] providers,
-        string data_uri,
-        address[] appeal_addresses
-    );
-
     event RetrievalDealProposalCreate(
         uint256 index,
         address owner,
@@ -95,6 +60,8 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         uint256 retrieval_value,
         address[] appeal_addresses
     );
+
+    event DealProposalCanceled(uint256 index);
 
     constructor(
         address _settings_address,
@@ -124,6 +91,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
     function startDeal(uint256 _deal_index) public {
         // TODO: Only providers contract should be able to use this
         retrieval_deals[_deal_index].timestamp_start = block.timestamp;
+        retrieval_deals[_deal_index].status = Status.DealActivated;
     }
 
     function dealNotEnded(uint256 _deal_index) public view returns (bool) {
@@ -191,7 +159,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
 
     function getOwner(uint256 _deal_index) public view returns (address) {
         if (retrieval_deals[_deal_index].owner != address(0)) {
-            return deals[_deal_index].owner;
+            return retrieval_deals[_deal_index].owner;
         } else {
             return ownerOf(_deal_index);
         }
@@ -281,61 +249,20 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
     }
 
     /*
-        This method will allow client to create a deal
+        This method will allow client to cancel deal if not accepted
     */
-    function createDealProposal(
-        string memory _data_uri,
-        uint256 duration,
-        uint256 collateral,
-        uint256 value,
-        address[] memory _providers,
-        address[] memory _appeal_addresses
-    ) external nonReentrant {
-        if (settings.contract_protected()) {
-            require(value == 0, "Contract is protected, can't accept value");
-        }
-        require(
-            vaultStore.getBalance(msg.sender) >= value,
-            "Not enough balance to create deal proposal"
-        );
-        require(
-            duration >= settings.min_duration() && duration <= settings.max_duration(),
-            "Duration is out allowed range"
-        );
-        // uint256 maximum_collateral = settings.slashing_multiplier() * msg.value;
-        require(
-            value >= settings.min_deal_value(),
-            // && collateral >= msg.value && collateral <= maximum_collateral
-            "Collateral or value out of range"
-        );
-        require(_appeal_addresses.length > 0, "You must define one or more appeal addresses");
-        // Creating next id
-        dealCounter.increment();
-        uint256 index = dealCounter.current();
-        // Creating the deal mapping
-        deals[index].timestamp_request = block.timestamp;
-        deals[index].owner = msg.sender;
-        deals[index].data_uri = _data_uri;
-        deals[index].duration = duration;
-        deals[index].collateral = collateral;
-        deals[index].value = value;
-        // Check if provided providers are active and store in struct
-        for (uint256 i = 0; i < _providers.length; i++) {
-            /*require(
-                isProvider(_providers[i]),
-                "Requested provider is not active"
-            );*/
-            deals[index].providers[_providers[i]] = true;
-        }
-        // Add appeal addresses to deal
-        for (uint256 i = 0; i < _appeal_addresses.length; i++) {
-            deals[index].appeal_addresses[_appeal_addresses[i]] = true;
-        }
-        // When created the amount of money is owned by sender
-        // vault[address(this)] += msg.value;
-        vaultStore.sub(msg.sender, value);
-        vaultStore.add(address(this), value);
-        // Emit event
-        emit DealProposalCreated(index, _providers, _data_uri, _appeal_addresses);
+    function cancelDealProposal(uint256 deal_index) external nonReentrant {
+        require(retrieval_deals[deal_index].owner == msg.sender, "Only owner can cancel the deal");
+        require(!retrieval_deals[deal_index].canceled, "Deal canceled yet");
+        // KS-PLW-03: Client can cancel the deal after it is accepted
+        require(retrieval_deals[deal_index].timestamp_start == 0, "Deal accepted already");
+        retrieval_deals[deal_index].canceled = true;
+        retrieval_deals[deal_index].timestamp_start = 0;
+        retrieval_deals[deal_index].status = Status.DealTerminated;
+        // Remove funds from internal vault giving back to user
+        // user will be able to withdraw funds later
+        vaultStore.sub(address(this), retrieval_deals[deal_index].retrieval_value);
+        vaultStore.add(msg.sender, retrieval_deals[deal_index].retrieval_value);
+        emit DealProposalCanceled(deal_index);
     }
 }
