@@ -1035,7 +1035,7 @@
     ethers "^4.0.0-beta.1"
     source-map-support "^0.5.19"
 
-"@openzeppelin/contracts@^4.9.3":
+"@openzeppelin/contracts@^4.8.1", "@openzeppelin/contracts@^4.9.3":
   version "4.9.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
   integrity sha512-He3LieZ1pP2TNt5JbkPA4PNT9WC3gOTOlDcFGJW4Le4QKqwmiNJCRt44APfxMxvq7OugU/cqYuPcSBzOw38DAg==
@@ -4825,6 +4825,13 @@ fetch-ponyfill@^4.0.0:
   integrity sha512-knK9sGskIg2T7OnYLdZ2hZXn0CtDrAIBxYQLpmEf0BqfdWnwmM1weccUl5+4EdA44tzNSFAuxITPbXtPehUB3g==
   dependencies:
     node-fetch "~1.7.1"
+
+fevmate@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/fevmate/-/fevmate-1.0.3.tgz#a5f9651c2c78c4954cc61edf05dd118ea4bdef84"
+  integrity sha512-obYVeDM7bAgky/uaprjXN9mZP032RhrG2rgTYWZghQcO9+knIGVHZRbTA98xmC9TgpQGlGbYf5sFk8rGgJ7AZA==
+  dependencies:
+    "@openzeppelin/contracts" "^4.8.1"
 
 fill-range@^4.0.0:
   version "4.0.0"
