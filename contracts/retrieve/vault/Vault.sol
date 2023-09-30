@@ -25,12 +25,12 @@ contract Vault is ReentrancyGuard, AccessControl {
     }
 
     function setProvidersRole(address _address) external {
-        require(hasRole(PROVIDERS_ROLE, msg.sender), "Caller is not an admin");
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
         _grantRole(PROVIDERS_ROLE, _address);
     }
 
     function setDealsRole(address _address) external {
-        require(hasRole(DEALS_ROLE, msg.sender), "Caller is not an admin");
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
         _grantRole(DEALS_ROLE, _address);
     }
 
