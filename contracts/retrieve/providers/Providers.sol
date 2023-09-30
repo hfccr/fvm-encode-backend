@@ -98,30 +98,6 @@ contract Providers is Ownable, ReentrancyGuard {
     }
 
     // ACCEPTANCE OF DEALS BY PROVIDER
-    /*
-        This method will allow a provider to accept a deal
-    */
-    function acceptDealProposal(uint256 deal_index) external nonReentrant {
-        require(
-            block.timestamp <
-                (dealsStore.getTimestampRequest(deal_index) + settings.proposal_timeout()) &&
-                !dealsStore.isCancelled(deal_index) &&
-                dealsStore.isProvider(deal_index, msg.sender),
-            "Deal expired, canceled or not allowed to accept"
-        );
-        require(
-            vaultStore.getBalance(msg.sender) >= dealsStore.getCollateral(deal_index),
-            "Can't accept because you don't have enough balance in contract"
-        );
-        // Mint the nft to the provider
-        // dealsStore.mint(msg.sender, deal_index);
-        // _mint(msg.sender, deal_index);
-        // Activate contract
-        dealsStore.startDeal(deal_index);
-        // Deposit collateral to contract
-        vaultStore.sub(msg.sender, dealsStore.getCollateral(deal_index));
-        vaultStore.add(address(this), dealsStore.getCollateral(deal_index));
-    }
 
     function acceptRetrievalDealProposal(uint256 deal_index) external nonReentrant {
         require(
