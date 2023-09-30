@@ -243,7 +243,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
             retrieval_deals[index].appeal_addresses[_appeal_addresses[i]] = true;
         }
         vaultStore.sub(msg.sender, retrieval_value);
-        vaultStore.add(address(this), retrieval_value);
+        vaultStore.addToVault(retrieval_value);
         emit RetrievalDealProposalCreate(
             index,
             msg.sender,
@@ -267,7 +267,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         retrieval_deals[deal_index].status = Status.DealTerminated;
         // Remove funds from internal vault giving back to user
         // user will be able to withdraw funds later
-        vaultStore.sub(address(this), retrieval_deals[deal_index].retrieval_value);
+        vaultStore.subFromVault(retrieval_deals[deal_index].retrieval_value);
         vaultStore.add(msg.sender, retrieval_deals[deal_index].retrieval_value);
         emit DealProposalCanceled(deal_index);
     }
