@@ -40,7 +40,7 @@ contract Appeals is Ownable, ReentrancyGuard {
     }
     Settings settings;
     Deals dealsStore;
-    Vault vault;
+    Vault vaultStore;
 
     mapping(address => Referee) public referees;
     // Array of active referees
@@ -67,7 +67,7 @@ contract Appeals is Ownable, ReentrancyGuard {
 
     constructor(address _settings_address, address _vault_address) {
         settings = Settings(_settings_address);
-        vault = Vault(_vault_address);
+        vaultStore = Vault(_vault_address);
     }
 
     function setDealsAddress(address _deals_address) external onlyOwner {
@@ -100,12 +100,12 @@ contract Appeals is Ownable, ReentrancyGuard {
         );
         // Be sure sent amount is exactly the appeal fee
         require(
-            vault.getBalance(msg.sender) >= returnAppealFee(deal_index),
+            vaultStore.getBalance(msg.sender) >= returnAppealFee(deal_index),
             // msg.value == returnAppealFee(deal_index),
             "Must have enough balance in vault to create an appeal"
         );
 
-        vault.sub(msg.sender, returnAppealFee(deal_index));
+        vaultStore.sub(msg.sender, returnAppealFee(deal_index));
 
         // Split fee to referees
         uint256 payment = returnAppealFee(deal_index);
@@ -113,7 +113,7 @@ contract Appeals is Ownable, ReentrancyGuard {
         if (payment > 0) {
             uint256 fee = payment / active_referees.length;
             for (uint256 i = 0; i < active_referees.length; i++) {
-                vault.add(active_referees[i], fee);
+                vaultStore.add(active_referees[i], fee);
             }
         }
         // Creating next id
@@ -204,13 +204,13 @@ contract Appeals is Ownable, ReentrancyGuard {
             dealsStore.retireDeal(deal_index);
             appeals[appeal_index].active = false;
             // Return value of deal back to owner
-            vault.sub(address(this), dealsStore.getValue(deal_index));
-            vault.add(dealsStore.getOwner(deal_index), dealsStore.getValue(deal_index));
+            vaultStore.subFromVault(dealsStore.getValue(deal_index));
+            vaultStore.add(dealsStore.getOwner(deal_index), dealsStore.getValue(deal_index));
             // Remove funds from provider and charge provider
             uint256 collateral = dealsStore.getCollateral(deal_index);
-            vault.sub(address(this), collateral);
+            vaultStore.subFromVault(collateral);
             // All collateral to protocol's address:
-            vault.add(settings.protocol_address(), collateral);
+            vaultStore.addToProtocol(collateral);
             // Split collateral between client and protocol:
             // -> vault[settings.protocol_address()] += collateral / 2;
             // -> vault[deals[deal_index].owner] += collateral / 2;
