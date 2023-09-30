@@ -21,7 +21,8 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         RequestSubmitted,
         DealPublished,
         DealActivated,
-        DealTerminated
+        DealTerminated,
+        DealRedeemed
     }
 
     struct RetrievalDeal {
@@ -86,10 +87,15 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
     function retireDeal(uint256 _deal_index) public {
         // TODO: Only appeals address can make this change and provider contract address
         retrieval_deals[_deal_index].timestamp_start = 0;
+        retrieval_deals[_deal_index].status = Status.DealRedeemed;
     }
 
     function startDeal(uint256 _deal_index) public {
         // TODO: Only providers contract should be able to use this
+        require(
+            retrieval_deals[_deal_index].status == Status.DealPublished,
+            "Deal not in published state"
+        );
         retrieval_deals[_deal_index].timestamp_start = block.timestamp;
         retrieval_deals[_deal_index].status = Status.DealActivated;
     }
