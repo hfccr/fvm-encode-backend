@@ -30,7 +30,7 @@ contract Providers is Ownable, ReentrancyGuard {
 
     mapping(uint64 => address) public provider_actor_id_to_eth_address;
 
-    constructor(address _settings_address, address _appeals_address, address _vault_address) {
+    constructor(address _settings_address, address _vault_address, address _appeals_address) {
         settings = Settings(_settings_address);
         appealsStore = Appeals(_appeals_address);
         vaultStore = Vault(_vault_address);
