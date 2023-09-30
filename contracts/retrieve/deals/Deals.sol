@@ -41,7 +41,27 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         uint64 client_actor_id;
     }
 
+    struct RetrievalDealReturn {
+        address owner;
+        uint64 deal_id;
+        uint256 retrieval_provider_collateral;
+        uint256 retrieval_value;
+        bool canceled;
+        Status status;
+        uint256 timestamp_request;
+        uint256 timestamp_start;
+        uint64 provider_actor_id;
+        uint64 client_actor_id;
+        int64 deal_start;
+        int64 deal_end;
+        bytes data;
+        uint64 size;
+        bytes appeal_addresses;
+    }
+
     mapping(uint256 => RetrievalDeal) public retrieval_deals;
+
+    mapping(uint256 => address[]) public retrieval_deal_appeal_addresses;
 
     Counters.Counter private dealCounter;
 
@@ -238,6 +258,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < _appeal_addresses.length; i++) {
             retrieval_deals[index].appeal_addresses[_appeal_addresses[i]] = true;
         }
+        retrieval_deal_appeal_addresses[index] = _appeal_addresses;
         vaultStore.sub(msg.sender, retrieval_value);
         vaultStore.addToVault(retrieval_value);
         emit RetrievalDealProposalCreate(
@@ -266,5 +287,37 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         vaultStore.subFromVault(retrieval_deals[deal_index].retrieval_value);
         vaultStore.add(msg.sender, retrieval_deals[deal_index].retrieval_value);
         emit DealProposalCanceled(deal_index);
+    }
+
+    function getAllDeals() external view returns (RetrievalDealReturn[] memory) {
+        RetrievalDealReturn[] memory deals = new RetrievalDealReturn[](dealCounter.current());
+        for (uint256 i = 0; i < dealCounter.current(); i++) {
+            deals[i].deal_id = retrieval_deals[i].deal_id;
+            deals[i].owner = retrieval_deals[i].owner;
+            deals[i].deal_id = retrieval_deals[i].deal_id;
+            deals[i].retrieval_provider_collateral = retrieval_deals[i]
+                .retrieval_provider_collateral;
+            deals[i].retrieval_value = retrieval_deals[i].retrieval_value;
+            deals[i].canceled = retrieval_deals[i].canceled;
+            deals[i].status = retrieval_deals[i].status;
+            deals[i].timestamp_request = retrieval_deals[i].timestamp_request;
+            deals[i].timestamp_start = retrieval_deals[i].timestamp_start;
+            deals[i].provider_actor_id = retrieval_deals[i].provider_actor_id;
+            deals[i].client_actor_id = retrieval_deals[i].client_actor_id;
+            deals[i].deal_start = CommonTypes.ChainEpoch.unwrap(retrieval_deals[i].term.start);
+            deals[i].deal_end = CommonTypes.ChainEpoch.unwrap(retrieval_deals[i].term.end);
+            deals[i].data = retrieval_deals[i].dealCommitment.data;
+            deals[i].size = retrieval_deals[i].dealCommitment.size;
+            address[] memory appeal_addresses = retrieval_deal_appeal_addresses[i];
+            bytes memory appeal_addresses_concatenated;
+            for (uint256 j = 0; j < appeal_addresses.length; j++) {
+                appeal_addresses_concatenated = abi.encodePacked(
+                    appeal_addresses_concatenated,
+                    abi.encodePacked(appeal_addresses[j])
+                );
+            }
+            deals[i].appeal_addresses = appeal_addresses_concatenated;
+        }
+        return deals;
     }
 }
