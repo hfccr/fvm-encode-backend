@@ -8,7 +8,10 @@ contract Vault is ReentrancyGuard, AccessControl {
     // Referee, Providers and Clients vault
     mapping(address => uint256) public vault;
     bytes32 public constant APPEALS_ROLE = keccak256("APPEALS_ROLE");
+    bytes32 public constant DEALS_ROLE = keccak256("DEALS_ROLE");
+    bytes32 public constant PROVIDERS_ROLE = keccak256("PROVIDERS_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    address public _protocol_addess;
 
     constructor() {
         _grantRole(ADMIN_ROLE, msg.sender);
@@ -17,6 +20,21 @@ contract Vault is ReentrancyGuard, AccessControl {
     function setAppealsRole(address _address) external {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
         _grantRole(APPEALS_ROLE, _address);
+    }
+
+    function setProvidersRole(address _address) external {
+        require(hasRole(PROVIDERS_ROLE, msg.sender), "Caller is not an admin");
+        _grantRole(PROVIDERS_ROLE, _address);
+    }
+
+    function setDealsRole(address _address) external {
+        require(hasRole(DEALS_ROLE, msg.sender), "Caller is not an admin");
+        _grantRole(DEALS_ROLE, _address);
+    }
+
+    function setProtocolAddress(address _address) external {
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
+        _protocol_addess = _address;
     }
 
     /*
@@ -51,18 +69,53 @@ contract Vault is ReentrancyGuard, AccessControl {
     }
 
     function setValue(address _address, uint256 _value) public {
-        require(hasRole(APPEALS_ROLE, msg.sender), "Caller is not authorized");
+        require(
+            hasRole(APPEALS_ROLE, msg.sender) ||
+                hasRole(DEALS_ROLE, msg.sender) ||
+                hasRole(PROVIDERS_ROLE, msg.sender),
+            "Caller is not authorized"
+        );
         vault[_address] = _value;
     }
 
     function sub(address _address, uint256 _value) public {
-        require(hasRole(APPEALS_ROLE, msg.sender), "Caller is not authorized");
+        require(
+            hasRole(APPEALS_ROLE, msg.sender) ||
+                hasRole(DEALS_ROLE, msg.sender) ||
+                hasRole(PROVIDERS_ROLE, msg.sender),
+            "Caller is not authorized"
+        );
         vault[_address] -= _value;
     }
 
     function add(address _address, uint256 _value) public {
-        require(hasRole(APPEALS_ROLE, msg.sender), "Caller is not authorized");
+        require(
+            hasRole(APPEALS_ROLE, msg.sender) ||
+                hasRole(DEALS_ROLE, msg.sender) ||
+                hasRole(PROVIDERS_ROLE, msg.sender),
+            "Caller is not authorized"
+        );
         vault[_address] += _value;
+    }
+
+    function addToProtocol(uint256 _value) public {
+        require(
+            hasRole(APPEALS_ROLE, msg.sender) ||
+                hasRole(DEALS_ROLE, msg.sender) ||
+                hasRole(PROVIDERS_ROLE, msg.sender),
+            "Caller is not authorized"
+        );
+        vault[_protocol_addess] += _value;
+    }
+
+    function subFromProtocol(uint256 _value) public {
+        require(
+            hasRole(APPEALS_ROLE, msg.sender) ||
+                hasRole(DEALS_ROLE, msg.sender) ||
+                hasRole(PROVIDERS_ROLE, msg.sender),
+            "Caller is not authorized"
+        );
+        vault[_protocol_addess] -= _value;
     }
 
     function getBalance(address _address) public view returns (uint256) {
