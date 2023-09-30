@@ -86,11 +86,11 @@ contract Providers is Ownable, ReentrancyGuard {
         require(!dealsStore.isCancelled(deal_index), "Deal already cancelled");
 
         // Move value from contract to address
-        vaultStore.sub(address(this), dealsStore.getValue(deal_index));
+        vaultStore.subFromVault(dealsStore.getValue(deal_index));
         vaultStore.add(msg.sender, dealsStore.getValue(deal_index));
 
         // Giving back collateral to provider
-        vaultStore.sub(address(this), dealsStore.getCollateral(deal_index));
+        vaultStore.subFromVault(dealsStore.getCollateral(deal_index));
         vaultStore.add(msg.sender, dealsStore.getCollateral(deal_index));
         // Close the deal
         dealsStore.retireDeal(deal_index);
@@ -118,7 +118,7 @@ contract Providers is Ownable, ReentrancyGuard {
         dealsStore.startDeal(deal_index);
         // Deposit collateral to contract
         vaultStore.sub(msg.sender, dealsStore.getCollateral(deal_index));
-        vaultStore.add(address(this), dealsStore.getCollateral(deal_index));
+        vaultStore.addToVault(dealsStore.getCollateral(deal_index));
     }
 
     /*
