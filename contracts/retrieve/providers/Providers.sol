@@ -30,16 +30,14 @@ contract Providers is Ownable, ReentrancyGuard {
 
     mapping(uint64 => address) public provider_actor_id_to_eth_address;
 
-    constructor(
-        address _settings_address,
-        address _deals_address,
-        address _appeals_address,
-        address _vault_address
-    ) {
+    constructor(address _settings_address, address _appeals_address, address _vault_address) {
         settings = Settings(_settings_address);
-        dealsStore = Deals(_deals_address);
         appealsStore = Appeals(_appeals_address);
         vaultStore = Vault(_vault_address);
+    }
+
+    function setDealsAddress(address _deals_address) external onlyOwner {
+        dealsStore = Deals(_deals_address);
     }
 
     function getAddress(uint64 _actor_id) public view returns (address) {

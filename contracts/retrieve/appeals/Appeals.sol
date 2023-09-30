@@ -65,10 +65,13 @@ contract Appeals is Ownable, ReentrancyGuard {
 
     Counters.Counter private appealCounter;
 
-    constructor(address _settings_address, address _deals_address, address _vault_address) {
+    constructor(address _settings_address, address _vault_address) {
         settings = Settings(_settings_address);
-        dealsStore = Deals(_deals_address);
         vault = Vault(_vault_address);
+    }
+
+    function setDealsAddress(address _deals_address) external onlyOwner {
+        dealsStore = Deals(_deals_address);
     }
 
     /*
