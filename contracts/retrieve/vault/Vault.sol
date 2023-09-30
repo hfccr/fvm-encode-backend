@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./../settings/Settings.sol";
 
 contract Vault is ReentrancyGuard, AccessControl {
     // Referee, Providers and Clients vault
@@ -11,10 +12,11 @@ contract Vault is ReentrancyGuard, AccessControl {
     bytes32 public constant DEALS_ROLE = keccak256("DEALS_ROLE");
     bytes32 public constant PROVIDERS_ROLE = keccak256("PROVIDERS_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    address public _protocol_addess;
+    Settings settings;
 
-    constructor() {
+    constructor(Settings _settings_address) {
         _grantRole(ADMIN_ROLE, msg.sender);
+        settings = Settings(_settings_address);
     }
 
     function setAppealsRole(address _address) external {
@@ -30,11 +32,6 @@ contract Vault is ReentrancyGuard, AccessControl {
     function setDealsRole(address _address) external {
         require(hasRole(DEALS_ROLE, msg.sender), "Caller is not an admin");
         _grantRole(DEALS_ROLE, _address);
-    }
-
-    function setProtocolAddress(address _address) external {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
-        _protocol_addess = _address;
     }
 
     /*
@@ -58,11 +55,15 @@ contract Vault is ReentrancyGuard, AccessControl {
         require(success, "Withdraw to user failed");
     }
 
-    function getProtocolBalance(address _protocol_address, uint256 amount) external nonReentrant {
+    function getProtocolBalance() public view returns (uint256) {
+        return vault[settings.protocol_address()];
+    }
+
+    function transferProtocolBalance(uint256 amount) external nonReentrant {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not authorized");
-        uint256 balance = vault[_protocol_address];
+        uint256 balance = vault[settings.protocol_address()];
         require(balance >= amount, "Not enough balance to withdraw");
-        vault[_protocol_address] -= amount;
+        vault[settings.protocol_address()] -= amount;
         bool success;
         (success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Withdraw to user failed");
@@ -98,6 +99,26 @@ contract Vault is ReentrancyGuard, AccessControl {
         vault[_address] += _value;
     }
 
+    function addToVault(uint256 _value) public {
+        require(
+            hasRole(APPEALS_ROLE, msg.sender) ||
+                hasRole(DEALS_ROLE, msg.sender) ||
+                hasRole(PROVIDERS_ROLE, msg.sender),
+            "Caller is not authorized"
+        );
+        vault[address(this)] += _value;
+    }
+
+    function subFromVault(uint256 _value) public {
+        require(
+            hasRole(APPEALS_ROLE, msg.sender) ||
+                hasRole(DEALS_ROLE, msg.sender) ||
+                hasRole(PROVIDERS_ROLE, msg.sender),
+            "Caller is not authorized"
+        );
+        vault[address(this)] -= _value;
+    }
+
     function addToProtocol(uint256 _value) public {
         require(
             hasRole(APPEALS_ROLE, msg.sender) ||
@@ -105,17 +126,7 @@ contract Vault is ReentrancyGuard, AccessControl {
                 hasRole(PROVIDERS_ROLE, msg.sender),
             "Caller is not authorized"
         );
-        vault[_protocol_addess] += _value;
-    }
-
-    function subFromProtocol(uint256 _value) public {
-        require(
-            hasRole(APPEALS_ROLE, msg.sender) ||
-                hasRole(DEALS_ROLE, msg.sender) ||
-                hasRole(PROVIDERS_ROLE, msg.sender),
-            "Caller is not authorized"
-        );
-        vault[_protocol_addess] -= _value;
+        vault[settings.protocol_address()] += _value;
     }
 
     function getBalance(address _address) public view returns (uint256) {
