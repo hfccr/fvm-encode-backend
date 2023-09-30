@@ -66,17 +66,13 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
 
     constructor(
         address _settings_address,
-        address _vault_address
+        address _vault_address,
+        address _appeals_address,
+        address _providers_address
     ) ERC721("Retrieve Deals", "RTRV") {
         settings = Settings(_settings_address);
         vaultStore = Vault(_vault_address);
-    }
-
-    function setAppeals(address _appeals_address) external onlyOwner {
         appeals = Appeals(_appeals_address);
-    }
-
-    function setProviders(address _providers_address) external onlyOwner {
         providersStore = Providers(_providers_address);
     }
 
