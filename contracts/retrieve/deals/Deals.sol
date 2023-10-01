@@ -110,7 +110,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
     function startDeal(uint256 _deal_index) public {
         // TODO: Only providers contract should be able to use this
         require(
-            retrieval_deals[_deal_index].status == Status.DealPublished,
+            retrieval_deals[_deal_index].status == Status.RequestSubmitted,
             "Deal not in published state"
         );
         retrieval_deals[_deal_index].timestamp_start = block.timestamp;
