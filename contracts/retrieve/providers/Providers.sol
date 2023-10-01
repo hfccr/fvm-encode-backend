@@ -25,6 +25,8 @@ contract Providers is Ownable, ReentrancyGuard {
     mapping(address => Provider) public providers;
     // Array of active providers
     address[] public active_providers;
+    mapping(address => uint256[]) public provider_deals;
+    mapping(uint64 => uint256[]) public actor_id_deals;
     // Event emitted when a deal is redeemed
     event DealRedeemed(uint256 index);
 
@@ -42,6 +44,10 @@ contract Providers is Ownable, ReentrancyGuard {
 
     function getAddress(uint64 _actor_id) public view returns (address) {
         return provider_actor_id_to_eth_address[_actor_id];
+    }
+
+    function getActorId() public view returns (uint64) {
+        return providers[msg.sender].actor_id;
     }
 
     /**
@@ -119,6 +125,8 @@ contract Providers is Ownable, ReentrancyGuard {
         // Deposit collateral to contract
         vaultStore.sub(msg.sender, dealsStore.getCollateral(deal_index));
         vaultStore.addToVault(dealsStore.getCollateral(deal_index));
+        provider_deals[msg.sender].push(deal_index);
+        actor_id_deals[providers[msg.sender].actor_id].push(deal_index);
     }
 
     /*
@@ -126,6 +134,23 @@ contract Providers is Ownable, ReentrancyGuard {
     */
     function isProviderInDeal(uint256 deal_index, address provider) external view returns (bool) {
         return dealsStore.isProvider(deal_index, provider);
+    }
+
+    function emulateProviderActor(string memory _endpoint, uint64 _actor_id) external {
+        require(
+            provider_actor_id_to_eth_address[_actor_id] == address(0),
+            "Actor ID already exists"
+        );
+        require(
+            providers[msg.sender]._exists == false,
+            "Provider with this address already exists"
+        );
+        providers[msg.sender]._exists = true;
+        providers[msg.sender].active = true;
+        providers[msg.sender].endpoint = _endpoint;
+        providers[msg.sender].actor_id = _actor_id;
+        provider_actor_id_to_eth_address[_actor_id] = msg.sender;
+        active_providers.push(msg.sender);
     }
 
     /*
@@ -153,6 +178,7 @@ contract Providers is Ownable, ReentrancyGuard {
         providers[_provider].endpoint = _endpoint;
         providers[_provider].actor_id = _actor_id;
         if (_state) {
+            provider_actor_id_to_eth_address[_actor_id] = _provider;
             active_providers.push(_provider);
         } else {
             for (uint256 i = 0; i < active_providers.length; i++) {
@@ -163,5 +189,13 @@ contract Providers is Ownable, ReentrancyGuard {
                 }
             }
         }
+    }
+
+    function getDealsForProviderAddress(address _address) public view returns (uint256[] memory) {
+        return provider_deals[_address];
+    }
+
+    function getDealsForActorId(uint64 _actor_id) public view returns (uint256[] memory) {
+        return actor_id_deals[_actor_id];
     }
 }
