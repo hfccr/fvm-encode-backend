@@ -25,7 +25,7 @@ contract Settings is Ownable {
     // Render contract
     IRENDER public token_render;
     // Contract state variables
-    bool public contract_protected = true;
+    bool public contract_protected = false;
     bool public permissioned_providers = false;
     // Protocol address
     address public protocol_address;
