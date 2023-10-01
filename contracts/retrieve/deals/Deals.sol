@@ -237,8 +237,6 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         // uint256 maximum_collateral = settings.slashing_multiplier() * value;
         require(retrieval_value >= settings.min_deal_value(), "Collateral or value out of range");
         require(_appeal_addresses.length > 0, "You must define one or more appeal addresses");
-        // Creating next id
-        dealCounter.increment();
         uint256 index = dealCounter.current();
         // Creating the deal mapping
         retrieval_deals[index].owner = msg.sender;
@@ -262,6 +260,8 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         retrieval_deal_appeal_addresses[index] = _appeal_addresses;
         vaultStore.sub(msg.sender, retrieval_value);
         vaultStore.addToVault(retrieval_value);
+        // Creating next id
+        dealCounter.increment();
         emit RetrievalDealProposalCreate(
             index,
             msg.sender,
