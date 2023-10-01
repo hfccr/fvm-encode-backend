@@ -42,6 +42,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
     }
 
     struct RetrievalDealReturn {
+        uint256 id;
         address owner;
         uint64 deal_id;
         uint256 retrieval_provider_collateral;
@@ -292,6 +293,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
     function getAllDeals() external view returns (RetrievalDealReturn[] memory) {
         RetrievalDealReturn[] memory deals = new RetrievalDealReturn[](dealCounter.current());
         for (uint256 i = 0; i < dealCounter.current(); i++) {
+            deals[i].id = i;
             deals[i].deal_id = retrieval_deals[i].deal_id;
             deals[i].owner = retrieval_deals[i].owner;
             deals[i].deal_id = retrieval_deals[i].deal_id;
