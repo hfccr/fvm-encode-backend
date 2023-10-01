@@ -125,6 +125,10 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
         return retrieval_deals[_deal_index].appeal_addresses[_address];
     }
 
+    function isOwner(uint256 _deal_index, address _address) public view returns (bool) {
+        return retrieval_deals[_deal_index].owner == _address;
+    }
+
     function getDataUri(uint256 _deal_index) public view returns (string memory) {
         return string(retrieval_deals[_deal_index].dealCommitment.data);
     }

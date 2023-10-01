@@ -86,7 +86,7 @@ contract Appeals is Ownable, ReentrancyGuard {
         require(dealsStore.dealNotEnded(deal_index), "Deal ended, can't create appeals");
         // Check if appeal address was listed
         require(
-            dealsStore.isReferee(deal_index, msg.sender),
+            dealsStore.isOwner(deal_index, msg.sender),
             "Only authorized addresses can create appeal"
         );
         // Check if there's a pending appeal request
