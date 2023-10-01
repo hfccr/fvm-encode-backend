@@ -46,8 +46,8 @@ contract Providers is Ownable, ReentrancyGuard {
         return provider_actor_id_to_eth_address[_actor_id];
     }
 
-    function getActorId() public view returns (uint64) {
-        return providers[msg.sender].actor_id;
+    function getActorId(address _address) public view returns (uint64) {
+        return providers[_address].actor_id;
     }
 
     /**
