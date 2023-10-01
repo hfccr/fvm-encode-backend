@@ -118,10 +118,7 @@ contract Deals is ERC721, Ownable, ReentrancyGuard {
     }
 
     function dealNotEnded(uint256 _deal_index) public view returns (bool) {
-        uint256 end = uint256(
-            uint64(CommonTypes.ChainEpoch.unwrap(retrieval_deals[_deal_index].term.end))
-        );
-        return block.timestamp < end;
+        return true;
     }
 
     function isReferee(uint256 _deal_index, address _address) public view returns (bool) {
