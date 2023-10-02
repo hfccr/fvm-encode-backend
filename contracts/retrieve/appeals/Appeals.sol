@@ -275,6 +275,13 @@ contract Appeals is Ownable, ReentrancyGuard {
         active_referees.pop();
     }
 
+    function emulateReferee(string memory _endpoint) external {
+        require(!isReferee(msg.sender), "Duplicate referees are not permitted");
+        referees[msg.sender].active = true;
+        referees[msg.sender].endpoint = _endpoint;
+        active_referees.push(msg.sender);
+    }
+
     /*
         This method will allow owner to enable or disable a referee
     */
